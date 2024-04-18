@@ -1,0 +1,45 @@
+﻿Traditional:
+
+Pros:
+1) Simple and easy to read code (Keep It Simple and Secure). Errors and improper merging can be debugged easily and fixed.
+2) Secure -> No underlying system properties can be overridden during merging
+3) Space Optimal -> needs no extra space, the properties are updated in place. 
+4) Time optimal -> Simple get and set operations so not much overload for the compiler during runtime.
+5) The depth of calls to merge complex models is taken care compile time -> memory is allocated in the stack and hence optimal garbage collection
+6) Type safe as the assigning is done via strongly typed code.
+
+Cons:
+1) Every time model is added with new property, merge condition has to be added for that property. (Maintainability becomes a little difficult).
+2) if the model has many properties it would result in a large codebase for merging. (Trade off / Can be avoided by use of partial classes and breaking the model down to smaller units).
+
+
+
+
+Reflection:
+
+Pros:
+1) Can be exteneded easily when adding new property to model as it does not require writing merger code.
+
+Cons:
+1) Reflection is slow, hence is not very performant. Both get and set rely on reflected methods. Time will grow exponentially with multiple overrides to merge.
+2) Not type safe -> all c# types derive from object type, and the merge method will have to refer to object as the type to be mapped cannot be determined during compile time.
+3) Space -> every property in the top level model has to be maintained in a list, iterated and values have to be merged.
+4) Certain complex types(List, Array, String, Guid, any other type that can be stored in a documentDb which is not a value type in C#) has to be considered
+   primitive types and direct assigning to target instead of merging unit level properties. In order to accomplish this the type has to be compared with
+   a maintained record of known "ComplexButConsideredBaseTypes"
+5) Any new ComplexButConsideredBaseType added to model will have to be maintained in the merger code as a lookup aswell (Maintainability is difficult).
+6) Not Secure -> Using reflection to get properties of a class can lead to undesirable outcomes, Eg: A non accessable property during compile time can
+   be accessed using reflection. This is a big warning.
+7) Complex and obfuscated code. Not easy to understand and debug. Fail points / unpredicted behaviour will take longer effort to identify root cause.
+8) Improving reflection techniques like caching reflection(cache getter and setter methods) by using runtime delegate creation / using Reflection.Emit to generate runtime 
+   MSIL(Microsoft Intermediate Language) will not work as these require strong types during compile time(These does not work with object type).
+
+
+
+                                                                       BENCHMARK RESULTS
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+| Method      | Mean       | Error    | StdDev   |
+|------------ |-----------:|---------:|---------:|
+| Reflection  | 1,511.6 ns | 22.58 ns | 21.12 ns |
+| Traditional |   177.3 ns |  3.55 ns |  6.58 ns |
